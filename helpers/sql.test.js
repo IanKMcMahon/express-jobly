@@ -1,5 +1,6 @@
 const { sqlForPartialUpdate } = require('./sql'); // Import the function to be tested
-const { BadRequestError } = require('./expressError'); // Import the error class if used
+const { BadRequestError } = require('../expressError'); // Import the error class if used
+
 
 describe('sqlForPartialUpdate', () => {
   // Test case 1: Valid data
@@ -20,4 +21,4 @@ describe('sqlForPartialUpdate', () => {
     expect(() => {
       sqlForPartialUpdate(dataToUpdate, jsToSql);
     }).toThrow(BadRequestError); // Adjust based on your error handling
-  });
+  })});

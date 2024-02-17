@@ -1,6 +1,7 @@
 const { BadRequestError } = require("../expressError");
 
-// THIS NEEDS SOME GREAT DOCUMENTATION.
+// Update only specified data...dataToUpdate is passed in when calling the '/update'(Patch) route 
+// dynamically generating SQL queries for partial updates.
 
 function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   const keys = Object.keys(dataToUpdate);
