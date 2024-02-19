@@ -35,9 +35,23 @@ function authenticateJWT(req, res, next) {
 
 function ensureLoggedIn(req, res, next) {
   try {
-    if (!res.locals.user) throw new UnauthorizedError();
+    if (!res.locals.user) throw new UnauthorizedError("You must be logged in to complete this request");
     return next();
   } catch (err) {
+    return next(err);
+  }
+}
+
+
+function isAdmin(req, res, next) {
+  try {
+    let token = req.headers.authorization.split(' ')[1];
+    let user = jwt.decode(token);
+    console.log(user)
+
+    return user.isAdmin
+  }
+  catch(err){
     return next(err);
   }
 }
@@ -46,4 +60,10 @@ function ensureLoggedIn(req, res, next) {
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
+  isAdmin
 };
+
+// function getToken(req) {
+// token = req.headers.authorization.split(' ')[1];
+// return token;
+// }

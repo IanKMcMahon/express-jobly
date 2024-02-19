@@ -106,7 +106,40 @@ describe("GET /companies", function () {
         .set("authorization", `Bearer ${u1Token}`);
     expect(resp.statusCode).toEqual(500);
   });
+  test("returns filtered companies based on query parameters", async function () {
+    // Test filtering by name
+    const resp1 = await request(app).get("/companies").query({ name: "C1" });
+    expect(resp1.status).toBe(200);
+    expect(resp1.body.companies.length).toBe(1);
+    expect(resp1.body.companies[0].name).toBe("C1");
+
+    // Test filtering by minEmployees and maxEmployees
+    const resp2 = await request(app).get("/companies").query({ minEmployees: 1, maxEmployees: 2 });
+    expect(resp2.status).toBe(200);
+    expect(resp2.body.companies.length).toBe(2);
+  });
+
+  test("returns 400 error if invalid query parameters are provided", async function () {
+    const resp = await request(app).get("/companies").query({ invalidParam: "value" });
+    expect(resp.status).toBe(400);
+    expect(resp.body.error).toBe("Param not valid");
+   
+    //Test filtering by min and max where min > max
+    const resp3 = await request(app).get("/companies").query({minEmployees: 100, maxEmployees: 50 });
+    expect(resp3.status).toBe(400);
+    expect(resp3.body.error).toBe("minEmployees cannot be greater than maxEmployees");
+  });
+
 });
+  // test("Query String filters", async function() {
+  //   // Ensure that any filters passed in the query string are handled accordingly
+  //   // When No filter is passed, you get all companies
+  //   // When a 'minEmployees' filter is passed, results are limited by that condition
+  //   // This also applies to 'maxEmployees' and 'name'
+  //   // Any other args trigger an error
+  //   const resp = await request(app).get
+  // });
+
 
 /************************************** GET /companies/:handle */
 
