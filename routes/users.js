@@ -6,7 +6,7 @@ const jsonschema = require("jsonschema");
 
 const express = require("express");
 const { ensureLoggedIn, isAdmin } = require("../middleware/auth");
-const { BadRequestError } = require("../expressError");
+const { BadRequestError, UnauthorizedError } = require("../expressError");
 const User = require("../models/user");
 const { createToken } = require("../helpers/tokens");
 const userNewSchema = require("../schemas/userNew.json");
@@ -41,7 +41,7 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
         return res.status(201).json({ user, token });
     }
     else {
-      throw new BadRequestError("You are not authorized to add a user");
+      throw new UnauthorizedError("You are not authorized to add a user");
     }
   } 
   catch (err) {
@@ -64,7 +64,7 @@ router.get("/", ensureLoggedIn, async function (req, res, next) {
       return res.json({ users });
     }
     else {
-      throw new BadRequestError("Must be an admin to access this page");
+      throw new UnauthorizedError("Must be an admin to access this page");
     }
   } catch (err) {
     return next(err);
@@ -88,7 +88,7 @@ router.get("/:username", ensureLoggedIn, async function (req, res, next) {
 
     }  
     else {
-      throw new BadRequestError("You are not authorized to add a user");
+      throw new UnauthorizedError("You are not authorized to add a user");
     };
     } catch (err) {
       return next(err);
@@ -120,7 +120,7 @@ router.patch("/:username", ensureLoggedIn, async function (req, res, next) {
       return res.json({ user });
     }
     else {
-      throw new BadRequestError("Unauthorized to make changes to user");
+      throw new UnauthorizedError("Unauthorized to make changes to user");
     }    
   } catch (err) {
     return next(err);
@@ -141,12 +141,35 @@ router.delete("/:username", ensureLoggedIn, async function (req, res, next) {
       return res.json({ deleted: req.params.username });
     }  
     else {
-      throw new BadRequestError("Unauthorized to delete this user");
+      throw new UnauthorizedError("Unauthorized to delete this user");
     }      
   } catch (err) {
     return next(err);
   }
 });
 
+
+/** POST /[username]/jobs/[id]  { state } => { application }
+ *
+ * Returns {"applied": jobId}
+ *
+ * Authorization required: admin or same-user-as-:username
+ * */
+
+router.post("/:username/jobs/:id", async function (req, res, next) {
+  try {
+    if (isAdmin(req, res)){
+      const jobId = +req.params.id;
+      await User.applyToJob(req.params.username, jobId);
+      return res.json({ applied: jobId });
+    }
+    else {
+      throw new UnauthorizedError("Must be an admin to access this page");
+    }  
+  
+    } catch (err) {
+    return next(err);
+  }
+});
 
 module.exports = router;
