@@ -47,7 +47,6 @@ function isAdmin(req, res, next) {
   try {
     let token = req.headers.authorization.split(' ')[1];
     let user = jwt.decode(token);
-    console.log(user)
 
     return user.isAdmin
   }
