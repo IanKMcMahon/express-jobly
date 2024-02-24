@@ -5,7 +5,7 @@
 const jsonschema = require("jsonschema");
 
 const express = require("express");
-const { ensureLoggedIn, isAdmin } = require("../middleware/auth");
+const { ensureLoggedIn, isAdmin, ensureCorrectUserOrAdmin } = require("../middleware/auth");
 const { BadRequestError, UnauthorizedError } = require("../expressError");
 const User = require("../models/user");
 const { createToken } = require("../helpers/tokens");
@@ -79,7 +79,7 @@ router.get("/", ensureLoggedIn, async function (req, res, next) {
  * Authorization required: login
  **/
 
-router.get("/:username", ensureLoggedIn, async function (req, res, next) {
+router.get("/:username", ensureLoggedIn, ensureCorrectUserOrAdmin, async function (req, res, next) {
   try {
     const user = await User.get(req.params.username);
     if (isAdmin(req, res)){
@@ -106,7 +106,7 @@ router.get("/:username", ensureLoggedIn, async function (req, res, next) {
  * Authorization required: login
  **/
 
-router.patch("/:username", ensureLoggedIn, async function (req, res, next) {
+router.patch("/:username", ensureLoggedIn, ensureCorrectUserOrAdmin, async function (req, res, next) {
   try {
     if (isAdmin(req, res)){
     // OR if user is currently logged in //....      
@@ -133,16 +133,11 @@ router.patch("/:username", ensureLoggedIn, async function (req, res, next) {
  * Authorization required: login
  **/
 
-router.delete("/:username", ensureLoggedIn, async function (req, res, next) {
+router.delete("/:username", ensureLoggedIn, ensureCorrectUserOrAdmin, async function (req, res, next) {
   try {
-    if (isAdmin(req, res)){
     // OR if user is currently logged in //....
       await User.remove(req.params.username);
-      return res.json({ deleted: req.params.username });
-    }  
-    else {
-      throw new UnauthorizedError("Unauthorized to delete this user");
-    }      
+      return res.json({ deleted: req.params.username });    
   } catch (err) {
     return next(err);
   }
@@ -156,18 +151,14 @@ router.delete("/:username", ensureLoggedIn, async function (req, res, next) {
  * Authorization required: admin or same-user-as-:username
  * */
 
-router.post("/:username/jobs/:id", async function (req, res, next) {
+router.post("/:username/jobs/:id", ensureLoggedIn, ensureCorrectUserOrAdmin, async function (req, res, next) {
   try {
-    if (isAdmin(req, res)){
       const jobId = +req.params.id;
       await User.applyToJob(req.params.username, jobId);
       return res.json({ applied: jobId });
     }
-    else {
-      throw new UnauthorizedError("Must be an admin to access this page");
-    }  
-  
-    } catch (err) {
+
+  catch (err) {
     return next(err);
   }
 });
